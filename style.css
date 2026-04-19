@@ -121,18 +121,18 @@ body {
   display: grid;
   grid-auto-flow: column;
   grid-template-rows: repeat(5, 1fr);
-  gap: 8px 16px;
+  gap: 12px 20px;
 }
 .desktop-icon {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 4px;
-  padding: 8px;
-  border-radius: 8px;
-  width: 72px;
-  height: 88px;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 10px;
+  width: 94px;
+  height: 114px;
   cursor: pointer;
   background: transparent;
   border: none;
@@ -169,8 +169,8 @@ body {
   fill: none;
 }
 .desktop-icon .icon-img {
-  width: 56px;
-  height: 56px;
+  width: 73px;
+  height: 73px;
   flex-shrink: 0;
 }
 .desktop-icon .icon-img svg {
@@ -179,7 +179,7 @@ body {
 }
 .desktop-icon .icon-label {
   color: white;
-  font-size: 11px;
+  font-size: 14px;
   text-align: center;
   text-shadow: 0 1px 2px rgba(0,0,0,0.8);
   line-height: 1.2;
