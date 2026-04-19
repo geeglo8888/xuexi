@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>视频播放器</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #000;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      overflow: hidden;
+    }
+
+    .player-container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .video-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      position: relative;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+      padding: 40px 20px 20px;
+      transition: opacity 0.3s;
+    }
+
+    .controls.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+
+    .progress-bar:hover {
+      height: 6px;
+    }
+
+    .progress-filled {
+      height: 100%;
+      background: #4a90d9;
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.1s;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: white;
+    }
+
+    .controls-left, .controls-right {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .control-btn {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      padding: 5px;
+      transition: transform 0.2s;
+    }
+
+    .control-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .time-display {
+      font-size: 14px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .volume-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .volume-slider {
+      width: 100px;
+      height: 4px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 2px;
+      outline: none;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      background: white;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .playlist-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s;
+      z-index: 100;
+    }
+
+    .playlist-toggle:hover {
+      background: rgba(0, 0, 0, 0.8);
+    }
+
+    .playlist-panel {
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      width: 300px;
+      background: rgba(30, 30, 30, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      transform: translateX(350px);
+      transition: transform 0.3s;
+      z-index: 99;
+    }
+
+    .playlist-panel.show {
+      transform: translateX(0);
+    }
+
+    .playlist-header {
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      font-weight: bold;
+    }
+
+    .playlist-items {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .playlist-item {
+      padding: 12px 15px;
+      color: rgba(255, 255, 255, 0.8);
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .playlist-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .playlist-item.active {
+      background: rgba(74, 144, 217, 0.3);
+      color: white;
+    }
+
+    .playlist-item-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .playlist-item-info {
+      flex: 1;
+    }
+
+    .playlist-item-title {
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .playlist-item-duration {
+      font-size: 12px;
+      opacity: 0.6;
+    }
+
+    .play-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+    }
+
+    .play-overlay.hidden {
+      display: none;
+    }
+
+    .play-button-large {
+      width: 100px;
+      height: 100px;
+      background: rgba(74, 144, 217, 0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s;
+    }
+
+    .play-button-large:hover {
+      transform: scale(1.1);
+    }
+
+    /* 滚动条样式 */
+    .playlist-items::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .playlist-items::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .playlist-items::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="player-container">
+    <div class="video-wrapper" id="videoWrapper">
+      <video id="mainVideo" preload="metadata">
+        <source src="assets/video/high.mp4" type="video/mp4">
+        您的浏览器不支持视频播放。
+      </video>
+      <div class="play-overlay" id="playOverlay">
+        <div class="play-button-large">
+          <svg viewBox="0 0 24 24" fill="white" width="60" height="60">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <button class="playlist-toggle" id="playlistToggle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="vertical-align: middle; margin-right: 5px;">
+        <line x1="8" y1="6" x2="21" y2="6"></line>
+        <line x1="8" y1="12" x2="21" y2="12"></line>
+        <line x1="8" y1="18" x2="21" y2="18"></line>
+        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+      </svg>
+      播放列表
+    </button>
+
+    <div class="playlist-panel" id="playlistPanel">
+      <div class="playlist-header">播放列表</div>
+      <div class="playlist-items" id="playlistItems">
+        <div class="playlist-item active" data-video="assets/video/high.mp4" data-title="high">
+          <div class="playlist-item-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          </div>
+          <div class="playlist-item-info">
+            <div class="playlist-item-title">high</div>
+            <div class="playlist-item-duration">--:--</div>
+          </div>
+        </div>
+        <div class="playlist-item" data-video="assets/video/北京一夜 - 陈升.mp4" data-title="北京一夜 - 陈升">
+          <div class="playlist-item-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          </div>
+          <div class="playlist-item-info">
+            <div class="playlist-item-title">北京一夜 - 陈升</div>
+            <div class="playlist-item-duration">--:--</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls" id="controls">
+      <div class="progress-bar" id="progressBar">
+        <div class="progress-filled" id="progressFilled"></div>
+      </div>
+      <div class="controls-row">
+        <div class="controls-left">
+          <button class="control-btn" id="playBtn">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          </button>
+          <button class="control-btn" id="prevBtn">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+              <polygon points="19 20 9 12 19 4 19 20"></polygon>
+              <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2"></line>
+            </svg>
+          </button>
+          <button class="control-btn" id="nextBtn">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+              <polygon points="5 4 15 12 5 20 5 4"></polygon>
+              <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"></line>
+            </svg>
+          </button>
+          <div class="volume-control">
+            <button class="control-btn" id="volumeBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              </svg>
+            </button>
+            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="80">
+          </div>
+          <span class="time-display" id="timeDisplay">00:00 / 00:00</span>
+        </div>
+        <div class="controls-right">
+          <button class="control-btn" id="fullscreenBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <polyline points="9 21 3 21 3 15"></polyline>
+              <line x1="21" y1="3" x2="14" y2="10"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="player.js"></script>
+</body>
+</html>

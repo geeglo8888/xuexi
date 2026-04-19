@@ -30,89 +30,52 @@ function initDesktopIcons() {
   container.querySelectorAll('.desktop-icon').forEach((iconEl, index) => {
     iconEl.addEventListener('click', (e) => {
       e.stopPropagation();
-      selectIcon(index);
-      hideAllMenus();
     });
 
-    iconEl.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
+    iconEl.addEventListener('dblclick', (e) => {
       e.stopPropagation();
-      selectIcon(index);
-      showIconContextMenu(e.clientX, e.clientY);
+      const iconData = desktopIconsData[index];
+      if (iconData.id === 'computer') {
+        // 打开新标签页播放视频
+        window.open('player.html', '_blank', 'width=1200,height=800');
+      }
     });
+
   });
-}
-
-// 选择图标函数
-function selectIcon(index) {
-  document.querySelectorAll('.desktop-icon').forEach((el, i) => {
-    el.classList.toggle('selected', i === index);
-  });
-}
-
-// 清除选择函数
-function clearSelection() {
-  document.querySelectorAll('.desktop-icon').forEach(el => {
-    el.classList.remove('selected');
-  });
-}
-
-// 显示图标上下文菜单
-function showIconContextMenu(x, y) {
-  const menu = document.getElementById('iconContextMenu');
-  if (!menu) return;
-  
-  const adjustedX = Math.min(x, window.innerWidth - 200);
-  const adjustedY = Math.min(y, window.innerHeight - 100);
-  menu.style.left = adjustedX + 'px';
-  menu.style.top = adjustedY + 'px';
-  menu.classList.add('show');
-}
-
-// 隐藏所有菜单
-function hideAllMenus() {
-  const desktopContextMenu = document.getElementById('desktopContextMenu');
-  const iconContextMenu = document.getElementById('iconContextMenu');
-  const userMenu = document.getElementById('userMenu');
-  
-  if (desktopContextMenu) desktopContextMenu.classList.remove('show');
-  if (iconContextMenu) iconContextMenu.classList.remove('show');
-  if (userMenu) userMenu.classList.remove('show');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   initDesktopIcons();
   
-  // 添加桌面空白处点击事件
-  const desktopView = document.getElementById('desktopView');
-  if (desktopView) {
-    // 左键点击空白处清除选择
-    desktopView.addEventListener('click', (e) => {
-      if (e.target === desktopView || e.target.classList.contains('mountains')) {
-        clearSelection();
-        hideAllMenus();
-      }
-    });
-    
-    // 右键点击空白处清除选择并显示上下文菜单
-    desktopView.addEventListener('contextmenu', (e) => {
-      if (e.target === desktopView || e.target.classList.contains('mountains')) {
-        e.preventDefault();
-        clearSelection();
-        showDesktopContextMenu(e.clientX, e.clientY);
-      }
-    });
-  }
-});
-
-// 显示桌面上下文菜单
-function showDesktopContextMenu(x, y) {
-  const menu = document.getElementById('desktopContextMenu');
-  if (!menu) return;
+  // 页面切换功能
+  const sidebarItems = document.querySelectorAll('.sidebar-item');
+  const views = document.querySelectorAll('.view');
   
-  const adjustedX = Math.min(x, window.innerWidth - 220);
-  const adjustedY = Math.min(y, window.innerHeight - 400);
-  menu.style.left = adjustedX + 'px';
-  menu.style.top = adjustedY + 'px';
-  menu.classList.add('show');
-}
+  sidebarItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const targetView = item.dataset.view;
+      
+      // 更新侧边栏选中状态
+      sidebarItems.forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      
+      // 切换页面显示
+      views.forEach(view => view.classList.remove('active'));
+      const targetViewEl = document.getElementById(targetView + 'View');
+      if (targetViewEl) {
+        targetViewEl.classList.add('active');
+      }
+    });
+  });
+  
+  // 视频文件双击播放
+  const videoItems = document.querySelectorAll('.file-item[data-video]');
+  videoItems.forEach(item => {
+    item.addEventListener('dblclick', () => {
+      const videoUrl = item.dataset.video;
+      // 打开新标签页播放视频
+      window.open(`pages/player.html?video=${encodeURIComponent(videoUrl)}`, 'videoPlayer');
+    });
+  });
+  
+});

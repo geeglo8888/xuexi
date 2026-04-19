@@ -18,7 +18,17 @@ function initSidebar() {
   });
 }
 
+// 初始化所有视图模块
+function initAllViews() {
+  if (typeof window.initVideoView === 'function') window.initVideoView();
+  if (typeof window.initAudioView === 'function') window.initAudioView();
+  if (typeof window.initImageView === 'function') window.initImageView();
+  if (typeof window.initExplorerView === 'function') window.initExplorerView();
+  if (typeof window.initWebsiteView === 'function') window.initWebsiteView();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initSidebar();
-  switchView('desktopView');
+  initAllViews();
+  switchView('videoView'); // 默认显示视频页面
 });
