@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KodBox 网页桌面</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .app {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 64px;
+      background: #2a5a8a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 0;
+      flex-shrink: 0;
+    }
+
+    .sidebar-logo {
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .sidebar-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.8);
+      background: transparent;
+      border: none;
+      width: 56px;
+      transition: all 0.2s;
+    }
+
+    .sidebar-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-item.active {
+      background: #4a8ac9;
+      color: white;
+    }
+
+    .sidebar-item svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .sidebar-item span {
+      font-size: 10px;
+    }
+
+    .sidebar-user {
+      margin-top: auto;
+      position: relative;
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f59e0b, #f97316);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .user-avatar svg {
+      width: 20px;
+      height: 20px;
+      fill: white;
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      position: relative;
+    }
+
+    /* Views */
+    .view {
+      display: none;
+      width: 100%;
+      height: 100%;
+    }
+
+    .view.active {
+      display: flex;
+    }
+
+    /* Desktop View */
+    .desktop-view {
+      background: linear-gradient(to bottom, #5a8fc2 0%, #8eb4d9 40%, #b8d4e8 60%, #d4e4ef 75%, #e8eff4 85%, #f0f4f7 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mountains {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 30%;
+      background: 
+        linear-gradient(135deg, transparent 40%, #e8eff4 40%, #f5f8fa 45%, #fff 50%, #f0f4f7 55%, #dde8ef 60%, transparent 60%),
+        linear-gradient(125deg, transparent 35%, #d4e4ef 35%, #e8eff4 42%, #fff 48%, #f5f8fa 52%, #e0eaf0 58%, transparent 58%),
+        linear-gradient(140deg, transparent 45%, #ccdee8 45%, #dde8ef 50%, #f0f4f7 55%, #fff 58%, #e8eff4 62%, transparent 62%);
+      background-size: 50% 100%, 40% 100%, 60% 100%;
+      background-position: 0% 100%, 30% 100%, 70% 100%;
+      background-repeat: no-repeat;
+    }
+
+    /* Desktop Icons */
+    .desktop-icons {
+      position: absolute;
+      left: 32px;
+      top: 32px;
+      display: grid;
+      grid-auto-flow: column;
+      grid-template-rows: repeat(5, 1fr);
+      gap: 8px 16px;
+    }
+
+    .desktop-icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 4px;
+      padding: 8px;
+      border-radius: 8px;
+      width: 72px;
+      height: 88px;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .desktop-icon:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .desktop-icon.selected {
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(4px);
+    }
+
+    .desktop-icon .check {
+      display: none;
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 20px;
+      height: 20px;
+      background: #3b82f6;
+      border-radius: 50%;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .desktop-icon.selected .check {
+      display: flex;
+    }
+
+    .desktop-icon .check svg {
+      width: 14px;
+      height: 14px;
+      stroke: white;
+      stroke-width: 3;
+      fill: none;
+    }
+
+    .desktop-icon .icon-img {
+      width: 56px;
+      height: 56px;
+      flex-shrink: 0;
+    }
+
+    .desktop-icon .icon-img svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .desktop-icon .icon-label {
+      color: white;
+      font-size: 11px;
+      text-align: center;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+      line-height: 1.2;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    /* Clock */
+    .clock-widget {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 128px;
+      height: 128px;
+    }
+
+    /* Context Menu */
+    .context-menu {
+      display: none;
+      position: fixed;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      border: 1px solid #e5e7eb;
+      padding: 8px 0;
+      min-width: 200px;
+      z-index: 1000;
+    }
+
+    .context-menu.show {
+      display: block;
+    }
+
+    .context-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 12px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .context-menu-item:hover {
+      background: #eff6ff;
+    }
+
+    .context-menu-item .icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #3b82f6;
+    }
+
+    .context-menu-item .icon svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .context-menu-item .label {
+      flex: 1;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .context-menu-item .label .key {
+      color: #9ca3af;
+    }
+
+    .context-menu-item .shortcut {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .context-menu-item .arrow {
+      color: #9ca3af;
+    }
+
+    .context-menu-divider {
+      height: 1px;
+      background: #f3f4f6;
+      margin: 4px 0;
+    }
+
+    /* Icon Context Menu */
+    .icon-context-menu {
+      min-width: 180px;
+    }
+
+    /* User Menu */
+    .user-menu {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      margin-bottom: 8px;
+      width: 224px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      border: 1px solid #e5e7eb;
+      padding: 8px 0;
+      z-index: 1000;
+    }
+
+    .user-menu.show {
+      display: block;
+    }
+
+    .user-menu-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .user-menu-header .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f59e0b, #f97316);
+    }
+
+    .user-menu-header .info .name {
+      font-weight: 500;
+      color: #1f2937;
+    }
+
+    .user-menu-header .info .role {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .user-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 16px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .user-menu-item:hover {
+      background: #eff6ff;
+    }
+
+    .user-menu-item svg {
+      width: 16px;
+      height: 16px;
+      color: #6b7280;
+    }
+
+    .user-menu-item .label {
+      flex: 1;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .user-menu-item .suffix {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .user-menu-divider {
+      height: 1px;
+      background: #f3f4f6;
+      margin: 4px 0;
+    }
+
+    /* Explorer View */
+    .explorer-view {
+      background: white;
+    }
+
+    .explorer-sidebar {
+      width: 224px;
+      border-right: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .explorer-tree {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .tree-section {
+      margin-bottom: 8px;
+    }
+
+    .tree-section-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 8px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #4b5563;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .tree-section-header:hover {
+      background: #eff6ff;
+    }
+
+    .tree-section-header svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .tree-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 8px;
+      padding-left: 24px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #374151;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .tree-item:hover {
+      background: #eff6ff;
+    }
+
+    .tree-item svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .tree-item.level-2 {
+      padding-left: 40px;
+    }
+
+    .explorer-footer {
+      border-top: 1px solid #e5e7eb;
+      padding: 8px;
+      font-size: 12px;
+      color: #3b82f6;
+    }
+
+    .explorer-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .explorer-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .toolbar-nav {
+      display: flex;
+      gap: 4px;
+    }
+
+    .toolbar-btn {
+      padding: 4px;
+      border-radius: 4px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: #9ca3af;
+    }
+
+    .toolbar-btn:hover {
+      background: #f3f4f6;
+    }
+
+    .toolbar-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      background: #f9fafb;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #4b5563;
+    }
+
+    .breadcrumb svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .breadcrumb .separator {
+      width: 12px;
+      height: 12px;
+      color: #9ca3af;
+    }
+
+    .toolbar-spacer {
+      flex: 1;
+    }
+
+    .toolbar-action {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .toolbar-action svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .toolbar-action.primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .toolbar-action.primary:hover {
+      background: #2563eb;
+    }
+
+    .toolbar-action.secondary {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    .toolbar-action.secondary:hover {
+      background: #fde68a;
+    }
+
+    .file-grid {
+      flex: 1;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 16px;
+      align-content: start;
+    }
+
+    .file-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .file-item:hover {
+      background: #eff6ff;
+    }
+
+    .file-item .file-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .file-item .file-icon svg {
+      width: 48px;
+      height: 48px;
+    }
+
+    .file-item .file-name {
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .explorer-status {
+      border-top: 1px solid #e5e7eb;
+      padding: 8px 16px;
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    /* Website View */
+    .website-view {
+      background: linear-gradient(135deg, #3b82f6, #06b6d4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    .website-logo {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 48px;
+    }
+
+    .website-tagline {
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+
+    .website-title {
+      font-size: 36px;
+      font-weight: bold;
+      margin-bottom: 24px;
+    }
+
+    .website-desc {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 48px;
+    }
+
+    .website-buttons {
+      display: flex;
+      gap: 16px;
+    }
+
+    .website-btn {
+      padding: 12px 32px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+    }
+
+    .website-btn.outline {
+      background: transparent;
+      border: 1px solid white;
+      color: white;
+    }
+
+    .website-btn.filled {
+      background: white;
+      color: #3b82f6;
+    }
+
+    /* Adminer View */
+    .adminer-view {
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-logo">kod</div>
+      <div class="sidebar-nav">
+        <button class="sidebar-item active" data-view="desktop">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+          <span>桌面</span>
+        </button>
+        <button class="sidebar-item" data-view="explorer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>文件管理</span>
+        </button>
+        <button class="sidebar-item" data-view="website">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span>官网</span>
+        </button>
+        <button class="sidebar-item" data-view="adminer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+          </svg>
+          <span>Adminer</span>
+        </button>
+      </div>
+      <div class="sidebar-user">
+        <div class="user-avatar" id="userAvatarBtn">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+        </div>
+        <!-- User Menu -->
+        <div class="user-menu" id="userMenu">
+          <div class="user-menu-header">
+            <div class="avatar"></div>
+            <div class="info">
+              <div class="name">系统管理员</div>
+              <div class="role">admin</div>
+            </div>
+          </div>
+          <button class="user-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span class="label">账号中心</span></button>
+          <button class="user-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg><span class="label">文件管理</span></button>
+          <button class="user-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg><span class="label">后台管理</span></button>
+          <button class="user-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg><span class="label">用户管理</span></button>
+          <button class="user-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.5 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8.5L13.5 2z"></path><path d="M10 8.5V15h4"></path></svg><span class="label">插件管理</span></button>
+          <div class="user-menu-divider"></div>
+          <button class="user-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg><span class="label">多语言</span><span class="suffix">(language)</span></button>
+          <button class="user-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="0.5"></circle><circle cx="17.5" cy="10.5" r="0.5"></circle><circle cx="8.5" cy="7.5" r="0.5"></circle><circle cx="6.5" cy="12.5" r="0.5"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2z"></path></svg><span class="label">主题样式</span><span class="suffix">自动</span></button>
+          <button class="user-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg><span class="label">全屏</span></button>
+          <button class="user-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg><span class="label">关于</span></button>
+          <div class="user-menu-divider"></div>
+          <button class="user-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg><span class="label">客户端下载</span></button>
+          <button class="user-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg><span class="label">免费版</span></button>
+          <div class="user-menu-divider"></div>
+          <button class="user-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg><span class="label">退出</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Desktop View -->
+      <div class="view desktop-view active" id="desktopView">
+        <div class="mountains"></div>
+        <div class="desktop-icons" id="desktopIcons"></div>
+        <div class="clock-widget">
+          <svg viewBox="0 0 100 100" id="clockSvg"></svg>
+        </div>
+      </div>
+
+      <!-- Explorer View -->
+      <div class="view explorer-view" id="explorerView">
+        <div class="explorer-sidebar">
+          <div class="explorer-tree">
+            <div class="tree-section">
+              <button class="tree-section-header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                <span>位置</span>
+              </button>
+              <button class="tree-item"><svg viewBox="0 0 24 24" fill="#eab308" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>收藏夹</button>
+              <button class="tree-item"><svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>个人空间</button>
+              <button class="tree-item level-2"><svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>私密保险箱</button>
+              <button class="tree-item level-2"><svg viewBox="0 0 24 24" fill="#f97316"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>我的图片</button>
+              <button class="tree-item level-2"><svg viewBox="0 0 24 24" fill="#f97316"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>我的文档</button>
+              <button class="tree-item level-2"><svg viewBox="0 0 24 24" fill="#f97316"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>我的音乐</button>
+              <button class="tree-item level-2"><svg viewBox="0 0 24 24" fill="#f97316"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>桌面</button>
+              <button class="tree-item"><svg viewBox="0 0 24 24" fill="#f97316"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>企业网盘</button>
+              <button class="tree-item"><svg viewBox="0 0 24 24" fill="#f97316"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>我在的部门</button>
+              <button class="tree-item"><svg viewBox="0 0 24 24" fill="#f97316"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>与我协作</button>
+            </div>
+            <div class="tree-section">
+              <button class="tree-section-header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                <span>工具</span>
+              </button>
+              <button class="tree-item"><svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>最近文档</button>
+              <button class="tree-item"><svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>我的协作</button>
+              <button class="tree-item"><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>外链分享</button>
+              <button class="tree-item"><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>我的相册</button>
+              <button class="tree-item"><svg viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polyline points="3 6 5 6 6 20a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14h2"></polyline><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line><path d="M9 6V3h6v3"></path></svg>回收站</button>
+            </div>
+            <div class="tree-section">
+              <button class="tree-section-header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                <span>文件类型</span>
+              </button>
+            </div>
+            <div class="tree-section">
+              <button class="tree-section-header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                <span>个人标签</span>
+              </button>
+            </div>
+            <div class="tree-section">
+              <button class="tree-section-header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                <span>网络挂载 (admin)</span>
+              </button>
+            </div>
+          </div>
+          <div class="explorer-footer">434B / 不限制</div>
+        </div>
+        <div class="explorer-main">
+          <div class="explorer-toolbar">
+            <div class="toolbar-nav">
+              <button class="toolbar-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+              <button class="toolbar-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></button>
+              <button class="toolbar-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg></button>
+            </div>
+            <div class="breadcrumb">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              <span>个人空间</span>
+              <svg class="separator" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              <span>桌面</span>
+            </div>
+            <div class="toolbar-spacer"></div>
+            <button class="toolbar-action secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
+              新建文件夹
+            </button>
+            <button class="toolbar-action primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              上传
+            </button>
+          </div>
+          <div class="file-grid">
+            <div class="file-item">
+              <div class="file-icon" style="background: #dbeafe;">
+                <svg viewBox="0 0 48 48">
+                  <rect x="4" y="4" width="40" height="40" rx="8" fill="#4a90d9"></rect>
+                  <path d="M16 30c-3 0-5-2-5-5s2-5 5-5c0-4 3-7 7-7 3 0 6 2 7 5 3 0 6 3 6 6s-3 6-6 6H16z" fill="white"></path>
+                </svg>
+              </div>
+              <span class="file-name">icloud</span>
+            </div>
+            <div class="file-item">
+              <div class="file-icon" style="background: #fef9c3;">
+                <svg viewBox="0 0 48 48">
+                  <rect x="4" y="8" width="40" height="32" rx="2" fill="#f5e6a3"></rect>
+                  <path d="M8 12l12 8-12 8V12z" fill="#4caf50"></path>
+                  <path d="M20 20l12-8v24l-12-8V20z" fill="#81c784"></path>
+                  <circle cx="28" cy="24" r="4" fill="#f44336"></circle>
+                </svg>
+              </div>
+              <span class="file-name">高德地图</span>
+            </div>
+          </div>
+          <div class="explorer-status">2个项目</div>
+        </div>
+      </div>
+
+      <!-- Website View -->
+      <div class="view website-view" id="websiteView">
+        <div class="website-logo">kodcloud</div>
+        <div class="website-tagline">高效，流畅</div>
+        <div class="website-title">云端存储&协同办公</div>
+        <div class="website-desc">数千项细节精心优化，带给您Windows桌面般的体验，随时随地访问</div>
+        <div class="website-buttons">
+          <button class="website-btn outline">预约演示</button>
+          <button class="website-btn filled">体验DEMO</button>
+        </div>
+      </div>
+
+      <!-- Adminer View -->
+      <div class="view adminer-view" id="adminerView">
+        <span>Adminer 数据库管理</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Desktop Context Menu -->
+  <div class="context-menu" id="desktopContextMenu">
+    <button class="context-menu-item"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg></span><span class="label">刷新<span class="key">(E)</span></span><span class="shortcut">F5</span></button>
+    <div class="context-menu-divider"></div>
+    <button class="context-menu-item"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></span><span class="label">上传文件<span class="key">(U)</span></span><span class="shortcut">Ctrl+U</span></button>
+    <button class="context-menu-item"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg></span><span class="label">新建文件夹<span class="key">(N)</span></span><span class="shortcut">Alt+M</span></button>
+    <button class="context-menu-item"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg></span><span class="label">新建文件<span class="key">(W)</span></span></button>
+    <div class="context-menu-divider"></div>
+    <button class="context-menu-item"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg></span><span class="label">排序方式<span class="key">(S)</span></span><span class="arrow"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></span></button>
+    <button class="context-menu-item"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span><span class="label">图标大小</span><span class="arrow"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></span></button>
+    <button class="context-menu-item"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg></span><span class="label">更多</span><span class="arrow"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></span></button>
+    <div class="context-menu-divider"></div>
+    <button class="context-menu-item"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span><span class="label">属性<span class="key">(I)</span></span><span class="shortcut">Alt+I</span></button>
+    <div class="context-menu-divider"></div>
+    <button class="context-menu-item"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span><span class="label">轻应用<span class="key">(A)</span></span></button>
+    <button class="context-menu-item"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></span><span class="label">壁纸设置<span class="key">(B)</span></span></button>
+    <button class="context-menu-item"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></span><span class="label">账号中心<span class="key">(T)</span></span></button>
+  </div>
+
+  <!-- Icon Context Menu -->
+  <div class="context-menu icon-context-menu" id="iconContextMenu">
+    <button class="context-menu-item"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 10 4 15 9 20"></polyline><path d="M20 4v7a4 4 0 0 1-4 4H4"></path></svg></span><span class="label">打开<span class="key">(O)</span></span><span class="shortcut">Enter</span></button>
+    <button class="context-menu-item"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span><span class="label">桌面应用设置<span class="key">(D)</span></span></button>
+  </div>
+
+  <script>
+    // Desktop icons data
+    const desktopIconsData = [
+      { id: 'computer', label: '我的电脑', svg: `<svg viewBox="0 0 48 48"><rect x="6" y="8" width="36" height="26" rx="2" fill="#4a90d9" stroke="#2d5a87" stroke-width="1"/><rect x="8" y="10" width="32" height="20" fill="#87ceeb"/><rect x="18" y="34" width="12" height="4" fill="#666"/><rect x="14" y="38" width="20" height="3" rx="1" fill="#888"/></svg>` },
+      { id: 'photo', label: '我的相册', svg: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="#ff6b6b"/><circle cx="18" cy="18" r="4" fill="#4ecdc4"/><circle cx="30" cy="18" r="4" fill="#ffe66d"/><circle cx="24" cy="30" r="4" fill="#95e1d3"/><circle cx="14" cy="28" r="3" fill="#ff8b94"/><circle cx="34" cy="28" r="3" fill="#a8e6cf"/><circle cx="24" cy="14" r="3" fill="#ffd93d"/></svg>` },
+      { id: 'trash', label: '回收站', svg: `<svg viewBox="0 0 48 48"><path d="M14 16h20v24c0 2-2 4-4 4H18c-2 0-4-2-4-4V16z" fill="#888"/><rect x="12" y="12" width="24" height="4" rx="1" fill="#666"/><rect x="20" y="8" width="8" height="4" fill="#666"/><line x1="19" y1="20" x2="19" y2="38" stroke="#666" stroke-width="1.5"/><line x1="24" y1="20" x2="24" y2="38" stroke="#666" stroke-width="1.5"/><line x1="29" y1="20" x2="29" y2="38" stroke="#666" stroke-width="1.5"/></svg>` },
+      { id: 'help', label: '使用帮助', svg: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="#4a90d9"/><text x="24" y="32" text-anchor="middle" fill="white" font-size="24" font-weight="bold">?</text></svg>` },
+      { id: 'plugin', label: '插件中心', svg: `<svg viewBox="0 0 48 48"><rect x="8" y="8" width="32" height="32" rx="4" fill="#e8f4fd" stroke="#4a90d9" stroke-width="2"/><path d="M20 16v-4M28 16v-4" stroke="#4a90d9" stroke-width="2" stroke-linecap="round"/><circle cx="24" cy="28" r="8" fill="#4a90d9"/><path d="M24 24v8M20 28h8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>` },
+      { id: 'cloud', label: 'icloud', svg: `<svg viewBox="0 0 48 48"><rect x="4" y="4" width="40" height="40" rx="8" fill="#4a90d9"/><path d="M16 30c-3 0-5-2-5-5s2-5 5-5c0-4 3-7 7-7 3 0 6 2 7 5 3 0 6 3 6 6s-3 6-6 6H16z" fill="white"/></svg>` },
+      { id: 'settings', label: '系统设置', svg: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="#888"/><circle cx="24" cy="24" r="8" fill="#666"/><rect x="22" y="4" width="4" height="8" fill="#888"/><rect x="22" y="4" width="4" height="8" fill="#888" transform="rotate(45 24 24)"/><rect x="22" y="4" width="4" height="8" fill="#888" transform="rotate(90 24 24)"/><rect x="22" y="4" width="4" height="8" fill="#888" transform="rotate(135 24 24)"/><rect x="22" y="4" width="4" height="8" fill="#888" transform="rotate(180 24 24)"/><rect x="22" y="4" width="4" height="8" fill="#888" transform="rotate(225 24 24)"/><rect x="22" y="4" width="4" height="8" fill="#888" transform="rotate(270 24 24)"/><rect x="22" y="4" width="4" height="8" fill="#888" transform="rotate(315 24 24)"/></svg>` },
+      { id: 'map', label: '高德地图', svg: `<svg viewBox="0 0 48 48"><rect x="4" y="8" width="40" height="32" rx="2" fill="#f5e6a3"/><path d="M8 12l12 8-12 8V12z" fill="#4caf50"/><path d="M20 20l12-8v24l-12-8V20z" fill="#81c784"/><path d="M32 12l8 8-8 8V12z" fill="#a5d6a7"/><circle cx="28" cy="24" r="4" fill="#f44336"/></svg>` },
+      { id: 'log', label: '操作日志', svg: `<svg viewBox="0 0 48 48"><rect x="8" y="4" width="32" height="40" rx="2" fill="#e3f2fd" stroke="#90caf9" stroke-width="2"/><rect x="8" y="4" width="32" height="10" fill="#90caf9"/><line x1="14" y1="20" x2="34" y2="20" stroke="#bbb" stroke-width="2"/><line x1="14" y1="26" x2="34" y2="26" stroke="#bbb" stroke-width="2"/><line x1="14" y1="32" x2="28" y2="32" stroke="#bbb" stroke-width="2"/><line x1="14" y1="38" x2="24" y2="38" stroke="#bbb" stroke-width="2"/></svg>` },
+      { id: 'app', label: '轻应用', svg: `<svg viewBox="0 0 48 48"><rect x="4" y="4" width="40" height="40" rx="8" fill="#ff9800"/><path d="M24 12c-6.6 0-12 5.4-12 12v12h6V24c0-3.3 2.7-6 6-6s6 2.7 6 6v12h6V24c0-6.6-5.4-12-12-12z" fill="white"/></svg>` },
+    ];
+
+    // State
+    let currentView = 'desktop';
+    let selectedIconIndex = null;
+
+    // Elements
+    const sidebarItems = document.querySelectorAll('.sidebar-item');
+    const views = document.querySelectorAll('.view');
+    const desktopIconsContainer = document.getElementById('desktopIcons');
+    const desktopView = document.getElementById('desktopView');
+    const desktopContextMenu = document.getElementById('desktopContextMenu');
+    const iconContextMenu = document.getElementById('iconContextMenu');
+    const userAvatarBtn = document.getElementById('userAvatarBtn');
+    const userMenu = document.getElementById('userMenu');
+    const clockSvg = document.getElementById('clockSvg');
+
+    // Render desktop icons
+    function renderDesktopIcons() {
+      desktopIconsContainer.innerHTML = desktopIconsData.map((icon, index) => `
+        <button class="desktop-icon" data-index="${index}">
+          <div class="check">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <div class="icon-img">${icon.svg}</div>
+          <span class="icon-label">${icon.label}</span>
+        </button>
+      `).join('');
+
+      // Add event listeners
+      desktopIconsContainer.querySelectorAll('.desktop-icon').forEach((iconEl, index) => {
+        iconEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectIcon(index);
+          hideAllMenus();
+        });
+
+        iconEl.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          selectIcon(index);
+          showIconContextMenu(e.clientX, e.clientY);
+        });
+      });
+    }
+
+    // Select icon
+    function selectIcon(index) {
+      selectedIconIndex = index;
+      document.querySelectorAll('.desktop-icon').forEach((el, i) => {
+        el.classList.toggle('selected', i === index);
+      });
+    }
+
+    // Clear selection
+    function clearSelection() {
+      selectedIconIndex = null;
+      document.querySelectorAll('.desktop-icon').forEach(el => {
+        el.classList.remove('selected');
+      });
+    }
+
+    // Show desktop context menu
+    function showDesktopContextMenu(x, y) {
+      hideAllMenus();
+      const menu = desktopContextMenu;
+      const adjustedX = Math.min(x, window.innerWidth - 220);
+      const adjustedY = Math.min(y, window.innerHeight - 400);
+      menu.style.left = adjustedX + 'px';
+      menu.style.top = adjustedY + 'px';
+      menu.classList.add('show');
+    }
+
+    // Show icon context menu
+    function showIconContextMenu(x, y) {
+      hideAllMenus();
+      const menu = iconContextMenu;
+      const adjustedX = Math.min(x, window.innerWidth - 200);
+      const adjustedY = Math.min(y, window.innerHeight - 100);
+      menu.style.left = adjustedX + 'px';
+      menu.style.top = adjustedY + 'px';
+      menu.classList.add('show');
+    }
+
+    // Hide all menus
+    function hideAllMenus() {
+      desktopContextMenu.classList.remove('show');
+      iconContextMenu.classList.remove('show');
+      userMenu.classList.remove('show');
+    }
+
+    // Switch view
+    function switchView(view) {
+      currentView = view;
+      window.location.hash = view;
+
+      sidebarItems.forEach(item => {
+        item.classList.toggle('active', item.dataset.view === view);
+      });
+
+      views.forEach(v => {
+        v.classList.toggle('active', v.id === view + 'View');
+      });
+
+      hideAllMenus();
+      clearSelection();
+    }
+
+    // Update clock
+    function updateClock() {
+      const now = new Date();
+      const seconds = now.getSeconds();
+      const minutes = now.getMinutes();
+      const hours = now.getHours() % 12;
+
+      const secondDeg = (seconds / 60) * 360;
+      const minuteDeg = (minutes / 60) * 360 + (seconds / 60) * 6;
+      const hourDeg = (hours / 12) * 360 + (minutes / 60) * 30;
+
+      let clockHtml = '';
+
+      // Hour markers and numbers
+      for (let i = 0; i < 12; i++) {
+        const angle = (i * 30 - 90) * (Math.PI / 180);
+        const x1 = 50 + 38 * Math.cos(angle);
+        const y1 = 50 + 38 * Math.sin(angle);
+        const x2 = 50 + 45 * Math.cos(angle);
+        const y2 = 50 + 45 * Math.sin(angle);
+        const textX = 50 + 32 * Math.cos(angle);
+        const textY = 50 + 32 * Math.sin(angle);
+        const num = i === 0 ? 12 : i;
+
+        clockHtml += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="white" stroke-width="1" opacity="0.7"/>`;
+        clockHtml += `<text x="${textX}" y="${textY}" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="8" opacity="0.9">${num}</text>`;
+      }
+
+      // Minute markers
+      for (let i = 0; i < 60; i++) {
+        if (i % 5 === 0) continue;
+        const angle = (i * 6 - 90) * (Math.PI / 180);
+        const x1 = 50 + 42 * Math.cos(angle);
+        const y1 = 50 + 42 * Math.sin(angle);
+        const x2 = 50 + 45 * Math.cos(angle);
+        const y2 = 50 + 45 * Math.sin(angle);
+        clockHtml += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="white" stroke-width="0.5" opacity="0.5"/>`;
+      }
+
+      // Hands
+      clockHtml += `<line x1="50" y1="50" x2="50" y2="28" stroke="white" stroke-width="2.5" stroke-linecap="round" transform="rotate(${hourDeg} 50 50)"/>`;
+      clockHtml += `<line x1="50" y1="50" x2="50" y2="18" stroke="white" stroke-width="1.5" stroke-linecap="round" transform="rotate(${minuteDeg} 50 50)"/>`;
+      clockHtml += `<line x1="50" y1="50" x2="50" y2="15" stroke="#ff6b35" stroke-width="1" stroke-linecap="round" transform="rotate(${secondDeg} 50 50)"/>`;
+      clockHtml += `<circle cx="50" cy="50" r="2" fill="white"/>`;
+
+      clockSvg.innerHTML = clockHtml;
+    }
+
+    // Event listeners
+    sidebarItems.forEach(item => {
+      item.addEventListener('click', () => switchView(item.dataset.view));
+    });
+
+    desktopView.addEventListener('click', (e) => {
+      if (e.target === desktopView || e.target.classList.contains('mountains')) {
+        clearSelection();
+        hideAllMenus();
+      }
+    });
+
+    desktopView.addEventListener('contextmenu', (e) => {
+      if (e.target === desktopView || e.target.classList.contains('mountains')) {
+        e.preventDefault();
+        clearSelection();
+        showDesktopContextMenu(e.clientX, e.clientY);
+      }
+    });
+
+    userAvatarBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      userMenu.classList.toggle('show');
+    });
+
+    document.addEventListener('click', () => {
+      hideAllMenus();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        hideAllMenus();
+        clearSelection();
+      }
+    });
+
+    // Handle hash change
+    function handleHashChange() {
+      const hash = window.location.hash.slice(1) || 'desktop';
+      if (['desktop', 'explorer', 'website', 'adminer'].includes(hash)) {
+        switchView(hash);
+      }
+    }
+
+    window.addEventListener('hashchange', handleHashChange);
+
+    // Context menu items click
+    document.querySelectorAll('.context-menu-item').forEach(item => {
+      item.addEventListener('click', () => hideAllMenus());
+    });
+
+    // Initialize
+    renderDesktopIcons();
+    updateClock();
+    setInterval(updateClock, 1000);
+    handleHashChange();
+  </script>
+</body>
+</html>
