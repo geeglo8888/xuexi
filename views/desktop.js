@@ -1,0 +1,3 @@
+function showDesktop() {
+  switchView('desktopView');
+}

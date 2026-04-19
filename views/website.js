@@ -1,0 +1,3 @@
+function showWebsite() {
+  switchView('websiteView');
+}

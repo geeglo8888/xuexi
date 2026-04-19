@@ -1,0 +1,3 @@
+function showAdminer() {
+  switchView('adminerView');
+}
