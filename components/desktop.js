@@ -4,10 +4,10 @@ function initDesktopIcons() {
 
   // 桌面图标数据
   const desktopIconsData = [
-    { id: 'computer', label: '视频播放器', svg: `<svg viewBox="0 0 48 48"><rect x="4" y="4" width="40" height="40" rx="8" fill="#3b82f6"/><polygon points="18,18 28,24 18,30" fill="white"/></svg>` },
-    { id: 'photo', label: '音乐播放器', svg: `<svg viewBox="0 0 48 48"><rect x="4" y="4" width="40" height="40" rx="8" fill="#3b82f6"/><path d="M22 18v8h4v-8h4v16h-4v-8h-4v8h-4v-16h4z" fill="white"/></svg>` },
-    { id: 'trash', label: '我的图片', svg: `<svg viewBox="0 0 48 48"><rect x="4" y="4" width="40" height="40" rx="8" fill="#3b82f6"/><rect x="16" y="16" width="16" height="16" stroke="white" stroke-width="2" fill="none"/><path d="M16 24l4-4 4 4 4-4 4 4" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/></svg>` },
-    { id: 'help', label: '其他文件', svg: `<svg viewBox="0 0 48 48"><rect x="4" y="4" width="40" height="40" rx="8" fill="#3b82f6"/><path d="M16 18h12v2H18v16H16V18z" fill="white"/></svg>` },
+    { id: 'computer', label: '视频播放器', img: 'assets/icons/icon/shipinbofangqi.svg' },
+    { id: 'photo', label: '音乐播放器', img: 'assets/icons/icon/yinyuebofangqi.svg' },
+    { id: 'trash', label: '我的图片', img: 'assets/icons/icon/wodetupian.svg' },
+    { id: 'help', label: '其他文件', img: 'assets/icons/icon/qitawenjian.svg' },
     { id: 'plugin', label: '插件中心', svg: `<svg viewBox="0 0 48 48"><rect x="8" y="8" width="32" height="32" rx="4" fill="#e8f4fd" stroke="#4a90d9" stroke-width="2"/><path d="M20 16v-4M28 16v-4" stroke="#4a90d9" stroke-width="2" stroke-linecap="round"/><circle cx="24" cy="28" r="8" fill="#4a90d9"/><path d="M24 24v8M20 28h8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>` },
     { id: 'cloud', label: 'icloud', svg: `<svg viewBox="0 0 48 48"><rect x="4" y="4" width="40" height="40" rx="8" fill="#4a90d9"/><path d="M16 30c-3 0-5-2-5-5s2-5 5-5c0-4 3-7 7-7 3 0 6 2 7 5 3 0 6 3 6 6s-3 6-6 6H16z" fill="white"/></svg>` },
     { id: 'settings', label: '系统设置', svg: `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="#888"/><circle cx="24" cy="24" r="8" fill="#666"/><rect x="22" y="4" width="4" height="8" fill="#888"/><rect x="22" y="4" width="4" height="8" fill="#888" transform="rotate(45 24 24)"/><rect x="22" y="4" width="4" height="8" fill="#888" transform="rotate(90 24 24)"/><rect x="22" y="4" width="4" height="8" fill="#888" transform="rotate(135 24 24)"/><rect x="22" y="4" width="4" height="8" fill="#888" transform="rotate(180 24 24)"/><rect x="22" y="4" width="4" height="8" fill="#888" transform="rotate(225 24 24)"/><rect x="22" y="4" width="4" height="8" fill="#888" transform="rotate(270 24 24)"/><rect x="22" y="4" width="4" height="8" fill="#888" transform="rotate(315 24 24)"/></svg>` },
@@ -21,7 +21,7 @@ function initDesktopIcons() {
       <div class="check">
         <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
       </div>
-      <div class="icon-img">${icon.svg}</div>
+      <div class="icon-img">${icon.img ? `<img src="${icon.img}" alt="${icon.label}" style="width: 100%; height: 100%; object-fit: contain;">` : icon.svg}</div>
       <span class="icon-label">${icon.label}</span>
     </button>
   `).join('');
