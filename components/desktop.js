@@ -80,4 +80,39 @@ function hideAllMenus() {
   if (userMenu) userMenu.classList.remove('show');
 }
 
-document.addEventListener('DOMContentLoaded', initDesktopIcons);
+document.addEventListener('DOMContentLoaded', () => {
+  initDesktopIcons();
+  
+  // 添加桌面空白处点击事件
+  const desktopView = document.getElementById('desktopView');
+  if (desktopView) {
+    // 左键点击空白处清除选择
+    desktopView.addEventListener('click', (e) => {
+      if (e.target === desktopView || e.target.classList.contains('mountains')) {
+        clearSelection();
+        hideAllMenus();
+      }
+    });
+    
+    // 右键点击空白处清除选择并显示上下文菜单
+    desktopView.addEventListener('contextmenu', (e) => {
+      if (e.target === desktopView || e.target.classList.contains('mountains')) {
+        e.preventDefault();
+        clearSelection();
+        showDesktopContextMenu(e.clientX, e.clientY);
+      }
+    });
+  }
+});
+
+// 显示桌面上下文菜单
+function showDesktopContextMenu(x, y) {
+  const menu = document.getElementById('desktopContextMenu');
+  if (!menu) return;
+  
+  const adjustedX = Math.min(x, window.innerWidth - 220);
+  const adjustedY = Math.min(y, window.innerHeight - 400);
+  menu.style.left = adjustedX + 'px';
+  menu.style.top = adjustedY + 'px';
+  menu.classList.add('show');
+}
